@@ -1,5 +1,15 @@
+
 <?php
 session_start();
+
+if (isset($_SESSION['start_time'])) {
+    $elapsed = time() - $_SESSION['start_time'];
+    $minutes = floor($elapsed / 60);
+    $seconds = $elapsed % 60;
+    $formattedTime = sprintf("%02d:%02d", $minutes, $seconds);
+} else {
+    $formattedTime = "00:00";
+}
 
 $words = ["planet", "castle", "garden", "puzzle", "rocket"];
 $hints = [
@@ -49,9 +59,12 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
 <head>
     <meta charset="UTF-8">
     <title>Anagram Puzzle</title>
-    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="css/puzzle2.css">
+    <link rel="stylesheet" href="css/timer.css">
 </head>
 <body>
+<p class="timer">Time Elapsed: <?php echo $formattedTime; ?></p>
+
     <div class="game-container">
         <h1>🔤 Anagram Puzzle</h1>
         <p>Unscramble this word:</p>
@@ -79,7 +92,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
         <!-- Success message and Next Puzzle button -->
         <?php if ($success): ?>
             <div class="success-msg">✅ Correct! Ready for the next puzzle?</div>
-            <form action="Puzzle3.php" method="get">
+            <form action="puzzle3.php" method="get">
                 <button type="submit" class="next-puzzle">Go to Next Puzzle</button>
             </form>
         <?php endif; ?>

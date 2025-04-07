@@ -1,5 +1,16 @@
+
+
 <?php
 session_start();
+
+if (isset($_SESSION['start_time'])) {
+  $elapsed = time() - $_SESSION['start_time'];
+  $minutes = floor($elapsed / 60);
+  $seconds = $elapsed % 60;
+  $formattedTime = sprintf("%02d:%02d", $minutes, $seconds);
+} else {
+  $formattedTime = "00:00";
+}
 
 if (!isset($_SESSION['currentLevel'])) {
     $_SESSION['currentLevel'] = 1;
@@ -35,11 +46,15 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 <head>
   <meta charset="UTF-8" />
   <title>Puzzle 1 - PHP Vault</title>
-  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="css/puzzle1.css">
+  <link rel="stylesheet" href="css/timer.css">
 </head>
 <body>
+<p class="timer">Time Elapsed: <?php echo $formattedTime; ?></p>
+
   <div class="container <?= $feedback && !$success ? 'shake' : '' ?>">
     <h1>Puzzle 1</h1>
+
     <p>I speak without a mouth and hear without ears. What am I?</p>
 
     <form method="POST" action="">
