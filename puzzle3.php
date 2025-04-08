@@ -1,13 +1,22 @@
 <?php
 session_start();
 
+
+if (isset($_SESSION['start_time'])) {
+  $elapsed = time() - $_SESSION['start_time'];
+  $minutes = floor($elapsed / 60);
+  $seconds = $elapsed % 60;
+  $formattedTime = sprintf("%02d:%02d", $minutes, $seconds);
+} else {
+  $formattedTime = "00:00";
+}
 // Define emoji puzzles and answers
 $emoji_puzzles = [
     '🦁👑' => 'Lion King',
-    '🕷️🧑' => 'Spider Man', 
-    '🤥' => 'Pinocchio', 
+    '🕷️🧑' => 'Spider Man',
+    '🤥' => 'Pinocchio',
     '🔍🐠' => 'Finding Nemo',
-    '🧞‍♂️👳🐒' => 'Aladdin', 
+    '🧞‍♂️👳🐒' => 'Aladdin',
     '🤠🚀' => 'Toy Story',
     '🦖🌍' => 'Jurassic World',
     '🚗💨😡' => 'Fast and Furious',
@@ -17,7 +26,7 @@ $emoji_puzzles = [
 function resetPuzzle($emoji_puzzles) {
     $previous_emoji = $_SESSION['current_emoji'] ?? null;
 
-    // Avoid showing same emoji twice
+    // Avoid repeating the same emoji
     $filtered_puzzles = $emoji_puzzles;
     if ($previous_emoji !== null && count($emoji_puzzles) > 1) {
         unset($filtered_puzzles[$previous_emoji]);
@@ -29,13 +38,14 @@ function resetPuzzle($emoji_puzzles) {
     $_SESSION['puzzle_over'] = false;
 }
 
-// First time page load
+// First time loading puzzle
 if (!isset($_SESSION['current_emoji'])) {
     resetPuzzle($emoji_puzzles);
+    $_SESSION['puzzles_completed'] = 0; // Track solved puzzles
     $_SESSION['show_curtain'] = true;
 }
 
-// Load new puzzle after win or "Next Puzzle"
+// Load new puzzle after previous win or next button
 if (isset($_SESSION['load_new']) && $_SESSION['load_new']) {
     resetPuzzle($emoji_puzzles);
     unset($_SESSION['load_new']);
@@ -59,12 +69,23 @@ if (isset($_POST['submit_guess']) && !$_SESSION['puzzle_over']) {
     $user_guess = trim($_POST['guess']);
 
     if (strcasecmp($user_guess, $correct_answer) === 0) {
-        $feedback_message = "✅ Correct! The answer was <strong>$correct_answer</strong>. Loading next puzzle...";
         $_SESSION['correct_guess'] = true;
         $_SESSION['puzzle_over'] = true;
         $show_form = false;
+
+        // Increment puzzle count
+        $_SESSION['puzzles_completed'] = ($_SESSION['puzzles_completed'] ?? 0) + 1;
+
+        // Redirect to result if two puzzles completed
+        if ($_SESSION['puzzles_completed'] >= 2) {
+            header("Location: result.php");
+            exit;
+        }
+
+        // Otherwise, go to next puzzle
         $_SESSION['load_new'] = true;
-        echo "<meta http-equiv='refresh' content='2'>";
+        header("Location: " . $_SERVER['PHP_SELF']);
+        exit;
     } else {
         $_SESSION['attempts']++;
         $attempts_left = 3 - $_SESSION['attempts'];
@@ -85,10 +106,11 @@ if (isset($_POST['submit_guess']) && !$_SESSION['puzzle_over']) {
 <head>
     <meta charset="UTF-8">
     <title>Guess The Movie</title>
-    <link rel="stylesheet" href="puzzle3.css">
+    <link rel="stylesheet" href="css/puzzle3.css">
+    <link rel="stylesheet" href="css/timer.css">
 </head>
 <body>
-
+<p class="timer">Time Elapsed: <?php echo $formattedTime; ?></p>
 <?php if ($_SESSION['show_curtain']): ?>
     <div class="curtain-gif"></div>
     <?php $_SESSION['show_curtain'] = false; ?>
@@ -125,3 +147,5 @@ if (isset($_POST['submit_guess']) && !$_SESSION['puzzle_over']) {
 
 </body>
 </html>
+
+
